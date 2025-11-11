@@ -1,4 +1,11 @@
 # ORB-SLAM3
+### V1.0a, Nov 11 2025
+**Author** : Vivek
+The current OS3 implementation misses out on the map save and map load functionality. These two functionalities are quintessential
+ - **file**: `include/System.h:171-172` 
+ - **status**: Declared but commented out (Not implemented) 
+ - **Why it matters**: Without the save functionality, SLAM won't be useful. Need to preserve the model created during a session in future sessions.
+ - **Plan**: Implement binary searialization with msgpack-c. Start with MapPoint.
 
 ### V1.0, December 22th, 2021
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
