@@ -6,6 +6,13 @@ cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j
 
+echo "Configuring and building Thirdparty/Pangolin ..."
+cd ../../../Thirdparty/Pangolin
+mkdir build
+cd build
+cmake .. -DBUILD_PANGOLIN_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release
+make -j
+
 cd ../../g2o
 
 echo "Configuring and building Thirdparty/g2o ..."
@@ -32,9 +39,10 @@ cd Vocabulary
 tar -xf ORBvoc.txt.tar.gz
 cd ..
 
+
 echo "Configuring and building ORB_SLAM3 ..."
 
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j4
+cmake .. -DPangolin_DIR=Thirdparty/Pangolin/build -DCMAKE_BUILD_TYPE=Release
+make -j
