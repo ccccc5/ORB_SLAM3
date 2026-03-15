@@ -157,6 +157,9 @@ public:
 
     void SaveTrajectoryEuRoC(const string &filename, Map* pMap);
     void SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap);
+    
+    // Save map point cloud in PLY format
+    void SaveMapPointCloud(const string &filename);
 
     // Save data used for initialization debug
     void SaveDebugData(const int &iniIdx);

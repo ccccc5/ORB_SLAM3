@@ -7,13 +7,12 @@ File.version: "1.0"
 
 Camera.type: "PinHole"
 
-# Camera calibration and distortion parameters (OpenCV) 
-# Camera1.fx: 718.856
-# Camera1.fy: 718.856
-# Camera1.cx: 607.1928
-# Camera1.cy: 185.2157
-Camera1.fx: 320.5
-Camera1.fy: 320.5
+# Camera calibration and distortion parameters (OpenCV)
+# THESE ARE GENERIC VALUES AND WILL NOT RESULT IN GOOD TRACKING!
+# Please use ROS camera_calibration or OpenCV calibration scripts with a checkerboard
+# to get the accurate values for your specific UVC camera.
+Camera1.fx: 500.0
+Camera1.fy: 500.0
 Camera1.cx: 320.0
 Camera1.cy: 240.0
 
@@ -22,24 +21,21 @@ Camera1.k2: 0.0
 Camera1.p1: 0.0
 Camera1.p2: 0.0
 
+Camera.width: 640
+Camera.height: 480
+
 # Camera frames per second 
-Camera.fps: 20
+Camera.fps: 30.0
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
-
-# Camera resolution
-# Camera.width: 1241
-# Camera.height: 376
-Camera.width: 640
-Camera.height: 480
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 2000
+ORBextractor.nFeatures: 1000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid 	
 ORBextractor.scaleFactor: 1.2
@@ -57,14 +53,13 @@ ORBextractor.minThFAST: 7
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters
 #--------------------------------------------------------------------------------------------
-Viewer.KeyFrameSize: 0.1
+Viewer.KeyFrameSize: 0.05
 Viewer.KeyFrameLineWidth: 1.0
-Viewer.GraphLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
 Viewer.PointSize: 2.0
-Viewer.CameraSize: 0.15
-Viewer.CameraLineWidth: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
 Viewer.ViewpointX: 0.0
-Viewer.ViewpointY: -10.0
-Viewer.ViewpointZ: -0.1
-Viewer.ViewpointF: 2000.0
-
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500.0

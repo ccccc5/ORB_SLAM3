@@ -194,6 +194,12 @@ endif()
 #Monocular examples
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
+add_executable(live_feed_check Examples/Monocular/live_feed_check.cc)
+target_link_libraries(live_feed_check ${PROJECT_NAME})
+
+add_executable(mono_uvc Examples/Monocular/mono_uvc.cc)
+target_link_libraries(mono_uvc ${PROJECT_NAME})
+
 add_executable(mono_tum
         Examples/Monocular/mono_tum.cc)
 target_link_libraries(mono_tum ${PROJECT_NAME})

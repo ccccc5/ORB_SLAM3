@@ -630,7 +630,26 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
 {
     cout << endl << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
-    vector<KeyFrame*> vpKFs = mpAtlas->GetAllKeyFrames();
+    vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+    Map* pBiggerMap = nullptr;
+    int numMaxKFs = 0;
+    
+    // Find the largest map structure
+    for(Map* pMap : vpMaps)
+    {
+        if(pMap->GetAllKeyFrames().size() > numMaxKFs)
+        {
+            numMaxKFs = pMap->GetAllKeyFrames().size();
+            pBiggerMap = pMap;
+        }
+    }
+
+    if (!pBiggerMap) {
+        cerr << "Error: No valid map found to save keyframe trajectory." << endl;
+        return;
+    }
+
+    vector<KeyFrame*> vpKFs = pBiggerMap->GetAllKeyFrames();
     sort(vpKFs.begin(),vpKFs.end(),KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
@@ -643,9 +662,7 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     {
         KeyFrame* pKF = vpKFs[i];
 
-       // pKF->SetPose(pKF->GetPose()*Two);
-
-        if(pKF->isBad())
+        if(!pKF || pKF->isBad())
             continue;
 
         Sophus::SE3f Twc = pKF->GetPoseInverse();
@@ -657,6 +674,70 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     }
 
     f.close();
+}
+
+void System::SaveMapPointCloud(const string &filename)
+{
+    cout << endl << "Saving map point cloud to " << filename << " ..." << endl;
+
+    vector<Map*> vpMaps = mpAtlas->GetAllMaps();
+    Map* pBiggerMap = nullptr;
+    int numMaxKFs = 0;
+    
+    // Find the largest map structure
+    for(Map* pMap : vpMaps)
+    {
+        if(pMap->GetAllKeyFrames().size() > numMaxKFs)
+        {
+            numMaxKFs = pMap->GetAllKeyFrames().size();
+            pBiggerMap = pMap;
+        }
+    }
+
+    if (!pBiggerMap) {
+        cerr << "Error: No valid map found to save point cloud." << endl;
+        return;
+    }
+
+    vector<MapPoint*> vpMPs = pBiggerMap->GetAllMapPoints();
+    
+    ofstream f;
+    f.open(filename.c_str());
+    if (!f.is_open()) {
+        cerr << "Error: Could not open " << filename << " for writing." << endl;
+        return;
+    }
+
+    f << "ply" << endl;
+    f << "format ascii 1.0" << endl;
+    f << "element vertex " << vpMPs.size() << endl;
+    f << "property float x" << endl;
+    f << "property float y" << endl;
+    f << "property float z" << endl;
+    f << "property uchar red" << endl;
+    f << "property uchar green" << endl;
+    f << "property uchar blue" << endl;
+    f << "end_header" << endl;
+
+    for (size_t i = 0; i < vpMPs.size(); ++i) {
+        MapPoint* pMP = vpMPs[i];
+        if (pMP && !pMP->isBad()) {
+            Eigen::Vector3f pos = pMP->GetWorldPos();
+            
+            // Map the Y coordinate (height) to a color gradient for visualization
+            // Standard ORB_SLAM bounds vary, but assuming -5.0 to 5.0 meters is reasonable for scale.
+            float h = pos(1);
+            int r = std::max(0, std::min(255, (int)(255 * (h + 5.0) / 10.0)));
+            int g = 255 - r;
+            int b = 150; // keep a bit of blue 
+            
+            f << fixed << setprecision(6) << pos(0) << " " << pos(1) << " " << pos(2) 
+              << " " << r << " " << g << " " << b << endl;
+        }
+    }
+
+    f.close();
+    cout << "Point cloud successfully saved to " << filename << endl;
 }
 
 void System::SaveTrajectoryEuRoC(const string &filename)
