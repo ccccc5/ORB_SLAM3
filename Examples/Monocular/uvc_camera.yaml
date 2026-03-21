@@ -11,21 +11,21 @@ Camera.type: "PinHole"
 # THESE ARE GENERIC VALUES AND WILL NOT RESULT IN GOOD TRACKING!
 # Please use ROS camera_calibration or OpenCV calibration scripts with a checkerboard
 # to get the accurate values for your specific UVC camera.
-Camera1.fx: 500.0
-Camera1.fy: 500.0
-Camera1.cx: 320.0
-Camera1.cy: 240.0
+Camera1.fx: 901.5
+Camera1.fy: 900.4
+Camera1.cx: 711.8
+Camera1.cy: 332.6
 
-Camera1.k1: 0.0
-Camera1.k2: 0.0
+Camera1.k1: 0.03 
+Camera1.k2: -0.01
 Camera1.p1: 0.0
 Camera1.p2: 0.0
 
-Camera.width: 640
-Camera.height: 480
+Camera.width: 1280
+Camera.height: 720
 
 # Camera frames per second 
-Camera.fps: 30.0
+Camera.fps: 30
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1

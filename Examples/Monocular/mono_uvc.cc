@@ -5,8 +5,16 @@
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
 #include<System.h>
+#include<csignal>
 
 using namespace std;
+
+volatile sig_atomic_t b_stop_tracking = 0;
+
+void signal_handler(int signum)
+{
+    b_stop_tracking = 1;
+}
 
 int main(int argc, char **argv)
 {
@@ -16,7 +24,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // Open the default UVC camera (index 0) using V4L2 explicitly
+    // 1. Create SLAM system first. 
+    // Loading the vocabulary takes several seconds. If we open the camera before this,
+    // the V4L2 buffer fills up with stale frames, causing the camera feed to drop or freeze.
+    cout << endl << "Initializing SLAM system... This may take a few seconds." << endl;
+    ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true);
+
+    // 2. Open the default UVC camera AFTER SLAM initialization
     // You can alter this to 1, 2, etc., if you have multiple cameras
     cv::VideoCapture cap(0, cv::CAP_V4L2);
     
@@ -29,29 +43,30 @@ int main(int argc, char **argv)
     }
 
     // Attempt to set a standard webcam resolution, e.g., 640x480
-    cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
+    // cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
+    // cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
     
-    // Explicitly set the camera framerate to 120 FPS
-    cap.set(cv::CAP_PROP_FPS, 120);
+    // Explicitly set the camera framerate to 120 FPS -> currently using 30
+    cap.set(cv::CAP_PROP_FPS, 30);
 
     // Read the actual FPS to confirm what the camera negotiated
     double actual_fps = cap.get(cv::CAP_PROP_FPS);
     cout << "Negotiated Camera FPS: " << actual_fps << endl;
 
-    // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true);
-
     cout << endl << "-------" << endl;
     cout << "Start processing live camera feed ..." << endl;
-    cout << "Press 'ESC' on the image window to close." << endl;
+    cout << "Press 'Ctrl+C' in the terminal to close and save the trajectory." << endl;
     cout << "-------" << endl << endl;
+
+    std::signal(SIGINT, signal_handler);
 
     cv::Mat frame;
     double tframe = 0;
 
     // Main real-time tracking loop
-    while(true)
+    while(!b_stop_tracking)
     {
         // 1. Capture the new frame
         cap >> frame;
@@ -65,15 +80,26 @@ int main(int argc, char **argv)
         tframe = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now().time_since_epoch()).count();
 
         // 3. Pass the image to the SLAM system
+        auto t1 = std::chrono::steady_clock::now();
         SLAM.TrackMonocular(frame, tframe);
+        auto t2 = std::chrono::steady_clock::now();
+        
+        double ttrack = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count();
+        int state = SLAM.GetTrackingState();
+        int nKeypoints = SLAM.GetTrackedKeyPointsUn().size();
+        
+        cout << "Frame Size: " << frame.cols << "x" << frame.rows 
+             << " | Tracker State: " << state 
+             << " | Keypoints: " << nKeypoints
+             << " | Tracking Time: " << ttrack << "s" << endl;
 
-        // Allow some time for OpenCV to update the viewing window (if one exists).
-        // 30ms sleep roughly caps input at 33fps max.
-        char key = (char)cv::waitKey(30);
-        if(key == 27 || key == 'q' || key == 'Q') // ESC or 'q'
-        {
-            break;
-        }
+        // NOTE: Do NOT use cv::imshow or cv::waitKey in this main thread!
+        // ORB_SLAM3 has its own Viewer thread that creates an OpenCV window 
+        // ("ORB-SLAM3: Current Frame") and calls cv::waitKey(). 
+        // Calling waitKey from two different threads will break X11/GTK event loop
+        // causing the SLAM viewer to freeze and show "WAITING FOR IMAGES".
+        
+        // cap >> frame already blocks at 30 fps, so no sleep is needed.
     }
 
     // Stop all threads
